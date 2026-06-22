@@ -1,0 +1,128 @@
+{
+  "configId": "srm-house-style",
+  "configVersion": "1.0.0",
+  "engineRange": ">=1.0.0 <2.0.0",
+  "client": "SRM default",
+  "match": { "canvasHost": "*" },
+  "protect": {
+    "selectors": ["pre", "code", "script", "style", ".math", "[data-latex]"],
+    "patterns": ["https?://\\S+", "\\$[^$]+\\$"],
+    "preserveTerms": ["in vivo", "in vitro", "p-value"]
+  },
+  "issues": [
+    {
+      "id": "double-space",
+      "category": "mechanical",
+      "tier": "auto",
+      "engine": "regex",
+      "find": " {2,}",
+      "replace": " ",
+      "message": "Collapsed multiple spaces to one"
+    },
+    {
+      "id": "straight-double-quote",
+      "category": "mechanical",
+      "tier": "auto",
+      "engine": "regex",
+      "find": "\"",
+      "message": "Straight double quote (curl to match house style)"
+    },
+    {
+      "id": "space-before-punct",
+      "category": "mechanical",
+      "tier": "auto",
+      "engine": "regex",
+      "find": " +([,.;:!?])",
+      "replace": "$1",
+      "message": "Removed space before punctuation"
+    },
+    {
+      "id": "click-here",
+      "category": "accessibility",
+      "tier": "suggest",
+      "engine": "regex",
+      "find": "\\b(click here|read more|this link)\\b",
+      "message": "Non-descriptive link text (WCAG 2.4.4)"
+    },
+    {
+      "id": "tell-em-dash",
+      "category": "ai-tell",
+      "tier": "suggest",
+      "engine": "freq",
+      "find": "—",
+      "threshold": { "perWords": 500, "max": 1 },
+      "message": "Em-dash overuse (AI tell #1)"
+    },
+    {
+      "id": "tell-ceremonial-open",
+      "category": "ai-tell",
+      "tier": "suggest",
+      "engine": "regex",
+      "find": "(?:^|>)\\s*(Great question|Absolutely|Let's dive in|Let's get started|Welcome!|In today's fast-paced|In this lesson,? we'?ll explore)",
+      "message": "Ceremonial opener (AI tell #2)"
+    },
+    {
+      "id": "tell-ceremonial-close",
+      "category": "ai-tell",
+      "tier": "suggest",
+      "engine": "regex",
+      "find": "(In conclusion|I hope this helps|Feel free to reach out|Let me know if you have any questions)",
+      "message": "Ceremonial closer (AI tell #2)"
+    },
+    {
+      "id": "tell-hedge-adverb",
+      "category": "ai-tell",
+      "tier": "flag",
+      "engine": "freq",
+      "find": "\\b(arguably|essentially|fundamentally|notably|importantly|somewhat|indeed)\\b",
+      "threshold": { "perWords": 400, "max": 1 },
+      "message": "Hedge-adverb stacking (AI tell #3)"
+    },
+    {
+      "id": "tell-not-x-y",
+      "category": "ai-tell",
+      "tier": "flag",
+      "engine": "regex",
+      "find": "\\b(isn't just|not just|it'?s not|more than just)\\b",
+      "message": "It's-not-X-it's-Y flourish (AI tell #4)"
+    },
+    {
+      "id": "term-email",
+      "category": "house-style",
+      "tier": "suggest",
+      "engine": "term",
+      "find": "\\be-mail\\b",
+      "replace": "email",
+      "message": "House style: 'email', not 'e-mail'"
+    },
+    {
+      "id": "term-login-noun",
+      "category": "house-style",
+      "tier": "suggest",
+      "engine": "term",
+      "find": "\\block in\\b",
+      "replace": "log in",
+      "message": "House style: 'log in' (verb), 'login' (noun)"
+    },
+    {
+      "id": "editorial-pass",
+      "category": "editorial",
+      "tier": "ai",
+      "engine": "ai",
+      "scope": ["grammar", "usage", "spelling-contextual", "clarity"],
+      "instruction": "You are a meticulous copy editor reviewing educational course content. Flag only clear errors in these categories: grammar (subject-verb agreement, fragments, run-ons, comma splices, tense), usage (wrong word: loose/lose, effect/affect, then/than, their/there/they're), contextual spelling (real misspellings, not proper nouns or jargon), and clarity (sentences that are correct but hard to parse). Do NOT flag mechanical issues (spacing, straight quotes, punctuation spacing), AI-tells, or house-style terminology — those are handled deterministically before you run; flagging them duplicates work. Skip proper nouns, acronyms, technical jargon, LMS terminology, URLs, email addresses, and code. Be conservative: clear errors only, never style preferences. Never change meaning, terminology, or the author's voice.",
+      "outputContract": {
+        "format": "JSON array, no prose, no markdown fences",
+        "fields": {
+          "type": "one of: grammar | usage | spelling | clarity",
+          "severity": "error | warning",
+          "flagged": "exact verbatim text with the error, under 10 words",
+          "context_before": "3-5 verbatim words immediately before flagged, or empty",
+          "context_after": "3-5 verbatim words immediately after flagged, or empty",
+          "explanation": "one sentence",
+          "suggestion": "direct replacement for flagged; substituting it in context must read correctly"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "coursebench",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Coursebench — Canvas course-content tool suite (Polish copy-edit workflow first).",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node test/providers.test.js && node test/engine.test.js && node test/analyze.test.js && node test/proxy.test.js"
+  },
+  "dependencies": {
+    "jsdom": "^29.1.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

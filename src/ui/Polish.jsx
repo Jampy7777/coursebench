@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import jig from "../../jigs/srm-house-style.json";
 import { analyzeItem, getProseText, applyFixToHtml } from "../engine/index.js";
-import { selectProvider } from "../providers/index.js";
+import { loadConfig, resolveProvider, DEFAULT_CONFIG } from "./deployment.js";
 
 /* ============================================================
    Polish v2 — by Six Red Marbles
@@ -61,6 +61,7 @@ export default function Polish() {
   const [step, setStep] = useState("setup");
   const [apiKey, setApiKey] = useState("");
   const [useAI, setUseAI] = useState(true);
+  const [deploy, setDeploy] = useState(DEFAULT_CONFIG);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [zipName, setZipName] = useState("");
   const [courseId, setCourseId] = useState("");
@@ -85,6 +86,8 @@ export default function Polish() {
     s.onerror = () => setError("Failed to load JSZip from CDN.");
     document.head.appendChild(s);
   }, []);
+
+  useEffect(() => { loadConfig().then(setDeploy); }, []);
 
   const addLog = useCallback((msg, color) => {
     setLog(p => [...p, { msg, color: color || COLORS.muted }]);
@@ -127,16 +130,17 @@ export default function Polish() {
     if (items.length === 0) { setError("Upload a Gather ZIP first"); return; }
     setStep("checking"); setError(""); abortRef.current = false;
 
-    // Build the AI provider once. Phase 2: client-key path only — a pasted key
-    // routes Direct (browser → Anthropic, key never leaves the browser). With no
-    // key we run deterministic-only. The SRM-key proxy provider arrives in Phase 3.
-    let provider = null;
-    if (useAI) {
-      if (apiKey.trim()) {
-        provider = selectProvider({ keyMode: "client", clientApiKey: apiKey.trim() });
-      } else {
-        addLog("No key — editorial pass skipped (deterministic only)", "#e67700");
-      }
+    // The deployment config decides the path: SRM-key proxy, client's own key,
+    // or deterministic-only. The engine never knows which — it just gets a provider.
+    const provider = resolveProvider(deploy, { useAI, clientApiKey: apiKey.trim() });
+    if (useAI && !provider) {
+      addLog(
+        deploy.mode === "srm" ? "Editorial pass unavailable (proxy not configured) — deterministic only"
+          : "No key — editorial pass skipped (deterministic only)",
+        "#e67700"
+      );
+    } else if (provider) {
+      addLog("Editorial pass: " + (provider.mode === "srm-key" ? "SRM" : "your key"), COLORS.muted);
     }
 
     const all = [];
@@ -289,20 +293,31 @@ export default function Polish() {
             <div style={{ ...card, padding: "16px 22px" }}>
               <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
                 <input type="checkbox" checked={useAI} onChange={e => setUseAI(e.target.checked)} style={{ width: 16, height: 16, accentColor: COLORS.accent }} />
-                <div>
+                <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>Editorial pass (AI)</div>
                   <div style={{ fontSize: 12, color: COLORS.mutedLight }}>Grammar, usage, contextual spelling, clarity. Prose only.</div>
                 </div>
+                {deploy.mode === "srm" && (
+                  <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", padding: "3px 9px", borderRadius: 12, background: COLORS.accentLight, color: COLORS.accent, fontFamily: mono }}>SRM</span>
+                )}
               </label>
-              <div style={{ marginTop: 12, fontSize: 12, color: COLORS.mutedLight, cursor: "pointer" }} onClick={() => setShowAdvanced(s => !s)}>
-                {showAdvanced ? "▾" : "▸"} Advanced / internal (BYO key)
-              </div>
-              {showAdvanced && (
-                <div style={{ marginTop: 10 }}>
-                  <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-ant-… (blank = use built-in access)"
-                    style={{ width: "100%", padding: "10px 14px", fontSize: 13, fontFamily: mono, border: "1px solid " + COLORS.border, borderRadius: 8, background: COLORS.surface2, color: COLORS.text, outline: "none", boxSizing: "border-box" }} />
-                  <p style={{ fontSize: 11, color: COLORS.mutedLight, marginTop: 6 }}>In production this points at the SRM proxy (no key in the browser). A pasted key is the internal fallback.</p>
-                </div>
+
+              {deploy.mode === "client" && (
+                <>
+                  <div style={{ marginTop: 12, fontSize: 12, color: COLORS.mutedLight, cursor: "pointer" }} onClick={() => setShowAdvanced(s => !s)}>
+                    {showAdvanced ? "▾" : "▸"} Your Anthropic key
+                  </div>
+                  {showAdvanced && (
+                    <div style={{ marginTop: 10 }}>
+                      <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="sk-ant-…"
+                        style={{ width: "100%", padding: "10px 14px", fontSize: 13, fontFamily: mono, border: "1px solid " + COLORS.border, borderRadius: 8, background: COLORS.surface2, color: COLORS.text, outline: "none", boxSizing: "border-box" }} />
+                      <p style={{ fontSize: 11, color: COLORS.mutedLight, marginTop: 6 }}>Your key is used directly from this browser and never sent to SRM.</p>
+                    </div>
+                  )}
+                </>
+              )}
+              {deploy.mode === "srm" && (
+                <p style={{ marginTop: 10, fontSize: 11, color: COLORS.mutedLight }}>The editorial pass runs on SRM's account through the secure proxy. No key needed.</p>
               )}
             </div>
 

@@ -1,0 +1,6 @@
+{
+  "mode": "srm",
+  "proxyEndpoint": "https://proxy.coursebench.sixredmarbles.com",
+  "jigId": "srm-house-style",
+  "token": "cb_REPLACE_WITH_CLIENT_TOKEN_FROM_issue-token_script"
+}

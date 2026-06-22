@@ -28,16 +28,20 @@ Do these in order. Everything code-side is built and tested; this is the infra y
    into `deps.checkRateLimit`).
 
 ## 4. Wire the client
-Set the UI's SRM-key mode config:
+Before building, drop a `public/config.json` (copy `public/config.example.json`):
 ```
-selectProvider({
-  keyMode: "srm",
-  proxyEndpoint: "https://proxy.coursebench.sixredmarbles.com",
-  clientToken: "<the token from step 1.4>",
-  jigId: "srm-house-style",
-})
+{ "mode": "srm",
+  "proxyEndpoint": "https://proxy.coursebench.sixredmarbles.com",
+  "jigId": "srm-house-style",
+  "token": "<the token from step 1.4>" }
 ```
-(The client-key path needs none of this — it stays direct.)
+`npm run build` bundles it into `dist/`. The end user never sees a key — the app
+routes the editorial pass through the proxy automatically. (config.json is
+gitignored since it carries the token; the token is origin-scoped + rate-limited,
+not a secret like SRM's Anthropic key.)
+
+For a bring-your-own-key deployment instead, omit config.json (or set
+`"mode": "client"`) and the user supplies their own key in the UI.
 
 ## 5. Compliance (run in parallel)
 - DPA + FERPA "school official" designation with each institution on the proxy path.

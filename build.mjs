@@ -1,5 +1,5 @@
 import * as esbuild from "esbuild";
-import { cpSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, rmSync, existsSync } from "node:fs";
 
 // Produces dist/ — the folder you upload with `wrangler pages deploy dist`.
 rmSync("dist", { recursive: true, force: true });
@@ -22,5 +22,9 @@ await esbuild.build({
 // is what the proxy's JIG_BASE_URL and the future bookmarklet will fetch).
 cpSync("public/index.html", "dist/index.html");
 cpSync("jigs", "dist/jigs", { recursive: true });
+
+// Per-deployment config.json (gitignored, holds the client token). If absent,
+// the app defaults to client-key mode.
+if (existsSync("public/config.json")) cpSync("public/config.json", "dist/config.json");
 
 console.log("\nBuilt dist/ — deploy with:  wrangler pages deploy dist\n");

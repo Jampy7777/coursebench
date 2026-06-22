@@ -6,7 +6,7 @@
   "description": "Coursebench — Canvas course-content tool suite (Polish copy-edit workflow first).",
   "scripts": {
     "build": "node build.mjs",
-    "test": "node test/providers.test.js && node test/engine.test.js && node test/analyze.test.js && node test/proxy.test.js"
+    "test": "node test/providers.test.js && node test/engine.test.js && node test/analyze.test.js && node test/proxy.test.js && node test/deployment.test.js"
   },
   "dependencies": {
     "jsdom": "^29.1.1",

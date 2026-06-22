@@ -4,8 +4,8 @@ compatibility_date = "2024-11-01"
 
 # Non-secret config:
 [vars]
-SUPABASE_URL = "https://YOUR-PROJECT.supabase.co"
-JIG_BASE_URL = "https://coursebench.sixredmarbles.com/jigs"
+SUPABASE_URL = "https://pyxqdbweccvqijcjcgjl.supabase.co"
+JIG_BASE_URL = "https://coursebench.pages.dev/jigs"
 
 # Secrets — set via the CLI, never commit:
 #   wrangler secret put ANTHROPIC_API_KEY

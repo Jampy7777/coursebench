@@ -76,7 +76,7 @@ async function fetchJig(env, deps, jigId) {
   return r.json().catch(() => null);
 }
 
-export async function handleRequest(request, env, deps = { fetch }) {
+export async function handleRequest(request, env, deps = { fetch: fetch.bind(globalThis) }) {
   const origin = request.headers.get("Origin") || "";
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
   if (request.method !== "POST") return json({ error: "method not allowed" }, 405, origin);
@@ -144,4 +144,4 @@ export async function handleRequest(request, env, deps = { fetch }) {
   return json(data, status, origin);
 }
 
-export default { fetch: (request, env) => handleRequest(request, env) };
+export default { fetch: (request, env) => handleRequest(request, env, { fetch: fetch.bind(globalThis) }) };
